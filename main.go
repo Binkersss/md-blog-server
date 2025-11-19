@@ -11,12 +11,8 @@ func main() {
 	var basePath string
 	basePath = "/home/binker/dev/go/md-blog/content"
 
-	p1 := structs.Post{
-		Title:    "First Blog Post",
-		FilePath: basePath + "/blog_1.md",
-	}
-
+	var blog structs.Blog = files.CreateBlogStruct(basePath)
 	fmt.Println("Hello from main")
 
-	fmt.Println(p1.Title)
+	fmt.Println(blog)
 }

@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
-func fileGetter(basePath string) []string {
+func CreateBlogStruct(basePath string) structs.Blog {
 	var paths []string
 
 	err := filepath.Walk(basePath, func(path string, info os.FileInfo, err error) error {
@@ -15,6 +16,7 @@ func fileGetter(basePath string) []string {
 			return err
 		}
 		if !info.IsDir() {
+
 			paths = append(paths, path)
 		}
 		return nil
@@ -23,19 +25,24 @@ func fileGetter(basePath string) []string {
 		fmt.Println(err)
 	}
 
-	return paths
+	var blog structs.Blog
+	for _, path := range paths {
+		post := createPostStruct(path)
+		blog.Posts = append(blog.Posts, post)
+	}
+
+	return blog
 }
 
 func createPostStruct(path string) structs.Post {
 
 	filename := filepath.Base(path)
 
+	if strings.HasSuffix(filename, ".md") {
+		filename = filename[:len(filename)-3]
+	}
 	return structs.Post{
 		Title:    filename,
 		FilePath: path,
 	}
-}
-
-func createBlogStruct(basePath string) structs.Blog {
-
 }
