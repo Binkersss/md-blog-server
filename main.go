@@ -6,6 +6,7 @@ import (
 	"binker/md-blog/server"
 	"binker/md-blog/structs"
 	"fmt"
+	"time"
 )
 
 func main() {
@@ -25,9 +26,17 @@ func main() {
 
 	fmt.Println(html.Title)
 
-	server.Server()
+	go server.Server()
 
-	server.PostHtml(html)
+	time.Sleep(200 * time.Millisecond)
 
-	fmt.Println(html)
+	err := server.PostHtml(html)
+	if err != nil {
+		fmt.Println("POST error:", err)
+	}
+
+	fmt.Println("Post uploaded. Visit in broswer:")
+	fmt.Printf("http://<hostname>:8080/posts/title:%s\n", html.Title)
+
+	select {}
 }

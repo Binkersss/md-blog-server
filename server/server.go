@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 )
+
+var posts = make(map[string][]byte)
+var mu sync.RWMutex
 
 func postHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Query().Get("title")
@@ -22,10 +26,30 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("Received post with title: %s\nHTML:\n%s", title, buf.String())
+	mu.Lock()
+	posts[title] = buf.Bytes()
+	mu.Unlock()
 
-	w.WriteHeader(http.StatusOK)
+	fmt.Printf("Stored '%s' (%d bytes)\n", title, len(buf.Bytes()))
+
 	fmt.Fprintf(w, "Post received: %s", title)
+}
+
+func getPostHandler(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path[len("/posts/title:"):]
+	title := path
+
+	mu.RLock()
+	html, exists := posts[title]
+	mu.RUnlock()
+
+	if !exists {
+		http.Error(w, "post not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.Write(html)
 }
 
 func PostHtml(data structs.PostData) error {
@@ -44,7 +68,6 @@ func PostHtml(data structs.PostData) error {
 
 func Server() {
 	http.HandleFunc("/posts", postHandler)
-	http.HandleFunc("/functs", PostHtml)
 	fmt.Println("Starting server on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
