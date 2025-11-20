@@ -8,3 +8,8 @@ type Post struct {
 type Blog struct {
 	Posts []Post
 }
+
+type PostData struct {
+	Title string
+	HTML  []byte
+}
