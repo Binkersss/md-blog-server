@@ -1,5 +1,8 @@
 # Changelog
 
+Nathaniel Chappelle
+2025-11-20
+
 ## v0.7.1
 - Clear POSTDISPLAY instead of unsetting (#634)
 - Always reset async file descriptor after consuming it (#630)

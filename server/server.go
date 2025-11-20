@@ -41,11 +41,13 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 
 func getPostHandler(w http.ResponseWriter, r *http.Request) {
 	const prefix = "/posts/title:"
-	if !strings.HasPrefix(r.URL.Path, prefix) {
+	path := r.URL.Path
+	if !strings.HasPrefix(path, prefix) {
 		http.Error(w, "Invalid path", http.StatusBadRequest)
 		return
 	}
-	title := r.URL.Path[len(prefix):]
+
+	title := path[len(prefix):]
 
 	mu.RLock()
 	html, exists := posts[title]
@@ -74,20 +76,14 @@ func PostHtml(data structs.PostData) error {
 	return nil
 }
 
-func Server() {
-	http.HandleFunc("/posts", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			postHandler(w, r)
-		} else if r.Method == http.MethodGet {
-			if strings.HasPrefix(r.URL.Path, "/posts/title:") {
-				getPostHandler(w, r)
-			} else {
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			}
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+func Server(staticFilesPath string) {
+
+	fs := http.FileServer(http.Dir(staticFilesPath))
+
+	http.Handle("/", fs)
+
+	http.HandleFunc("/posts", postHandler)
+	http.HandleFunc("/posts/", getPostHandler)
 	fmt.Println("Starting server on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

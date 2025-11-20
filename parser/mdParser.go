@@ -4,13 +4,19 @@ import (
 	"bytes"
 	"log"
 	"os"
+	"slices"
 
 	"github.com/yuin/goldmark"
 )
 
-func ParseMdFile(filepath string) []byte {
+func ParseMdFile(filepath string, stylepath string) []byte {
 
 	input, err := os.ReadFile(filepath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	style, err := os.ReadFile(stylepath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -22,5 +28,7 @@ func ParseMdFile(filepath string) []byte {
 
 	b := buf.Bytes()
 
-	return b
+	styled := slices.Concat(b, style)
+
+	return styled
 }
