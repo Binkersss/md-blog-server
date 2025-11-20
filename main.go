@@ -6,14 +6,20 @@ import (
 	"binker/md-blog/server"
 	"binker/md-blog/structs"
 	"fmt"
+	"os"
 	"time"
 )
 
 func main() {
 
-	var basePath string
-	basePath = "/home/binker/dev/go/md-blog/content"
+	args := os.Args[1:]
 
+	if len(args) != 1 {
+		fmt.Fprintf(os.Stderr, "Too many args; just basepath of blog files")
+		os.Exit(1)
+	}
+
+	var basePath string = args[0]
 	var blog structs.Blog = files.CreateBlogStruct(basePath)
 	fmt.Println("Hello from main")
 

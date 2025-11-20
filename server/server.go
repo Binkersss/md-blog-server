@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -13,6 +14,9 @@ var posts = make(map[string][]byte)
 var mu sync.RWMutex
 
 func postHandler(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Printf("Posts: %s", posts)
+
 	title := r.URL.Query().Get("title")
 	if title == "" {
 		http.Error(w, "missing title", http.StatusBadRequest)
@@ -36,8 +40,12 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getPostHandler(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path[len("/posts/title:"):]
-	title := path
+	const prefix = "/posts/title:"
+	if !strings.HasPrefix(r.URL.Path, prefix) {
+		http.Error(w, "Invalid path", http.StatusBadRequest)
+		return
+	}
+	title := r.URL.Path[len(prefix):]
 
 	mu.RLock()
 	html, exists := posts[title]
@@ -67,7 +75,19 @@ func PostHtml(data structs.PostData) error {
 }
 
 func Server() {
-	http.HandleFunc("/posts", postHandler)
+	http.HandleFunc("/posts", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			postHandler(w, r)
+		} else if r.Method == http.MethodGet {
+			if strings.HasPrefix(r.URL.Path, "/posts/title:") {
+				getPostHandler(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
 	fmt.Println("Starting server on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
