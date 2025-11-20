@@ -44,7 +44,7 @@ func PostHtml(data structs.PostData) error {
 
 func Server() {
 	http.HandleFunc("/posts", postHandler)
-
+	http.HandleFunc("/functs", PostHtml)
 	fmt.Println("Starting server on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
